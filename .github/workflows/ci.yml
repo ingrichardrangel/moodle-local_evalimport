@@ -51,7 +51,7 @@ jobs:
           - 3306:3306
         options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: plugin
       - name: Set up PHP
@@ -62,9 +62,10 @@ jobs:
           ini-values: max_input_vars=5000, memory_limit=512M
           coverage: none
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
+          package-manager-cache: false
       - name: Install CI tooling
         run: |
           composer create-project --no-dev --prefer-dist --no-interaction moodlehq/moodle-plugin-ci ci ^4
