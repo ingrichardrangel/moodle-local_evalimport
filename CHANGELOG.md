@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0-beta2 — 2026-09-22
+
+- Fix all coding-standard violations reported in CI run 96835402304:
+  anonymous-function spacing, multiline conditions and a multiline link call.
+- Remove redundant MOODLE_INTERNAL guards only from autoloaded service classes
+  and PHPUnit test files, as required by the current Moodle coding standard.
+  Guards on helper libraries and files with top-level includes remain in place.
+- Run independent quality checks and tests after successful environment setup,
+  even when another check fails. All checks remain blocking; no warnings are ignored.
+- No changes to the file formats, grading rules or rubric persistence behaviour.
+- Local PHP 7.4/8.4 CSV validation checks still pass. Full PHPUnit/Behat results
+  require a new CI run: the supplied run stopped at coding standards in every job.
+
 ## 0.2.0-beta1 — 2026-09-22
 
 ### Added

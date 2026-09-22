@@ -28,8 +28,6 @@ namespace local_evalimport;
 use local_evalimport\local\file_reader;
 use local_evalimport\local\rubric_validator;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * File format regression tests.
  *

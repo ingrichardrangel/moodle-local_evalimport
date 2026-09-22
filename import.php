@@ -112,8 +112,11 @@ if ($error !== null) {
 }
 echo html_writer::tag('p', get_string('filehelp', 'local_evalimport'));
 foreach (['xlsx', 'xls', 'csv'] as $format) {
-    echo html_writer::link(new moodle_url('/local/evalimport/template.php', ['id' => $course->id, 'format' => $format]),
-        get_string('downloadtemplate', 'local_evalimport', strtoupper($format)), ['class' => 'btn btn-secondary mr-2 mb-2']);
+    echo html_writer::link(
+        new moodle_url('/local/evalimport/template.php', ['id' => $course->id, 'format' => $format]),
+        get_string('downloadtemplate', 'local_evalimport', strtoupper($format)),
+        ['class' => 'btn btn-secondary mr-2 mb-2']
+    );
 }
 if ($preview !== null) {
     echo $OUTPUT->heading(get_string('previewimport', 'local_evalimport'), 3);

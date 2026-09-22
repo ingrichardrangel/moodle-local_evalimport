@@ -44,7 +44,7 @@ function local_evalimport_get_importable_activities(stdClass $course): array {
  */
 function local_evalimport_preview_table(array $criteria): string {
     $table = new html_table();
-    $table->head = array_map(static function($column) {
+    $table->head = array_map(static function ($column) {
         return get_string('column_' . $column, 'local_evalimport');
     }, \local_evalimport\local\rubric_validator::HEADERS);
     foreach ($criteria as $criterion) {

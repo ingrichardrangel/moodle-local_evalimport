@@ -24,8 +24,6 @@
 
 namespace local_evalimport\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Normalises rows and applies the same rubric rules to every file format.
  *
@@ -48,23 +46,26 @@ class rubric_validator {
         if (!$rows || count($rows) > file_reader::MAX_ROWS + 1) {
             throw new \moodle_exception('emptyrubric', 'local_evalimport');
         }
-        $headers = array_map(static function($value) {
+        $headers = array_map(static function ($value) {
             return strtolower(trim((string)$value));
         }, array_shift($rows));
-        if (count($headers) !== 4 || count(array_unique($headers)) !== 4 ||
-                array_diff(self::HEADERS, $headers)) {
+        if (
+            count($headers) !== 4 || count(array_unique($headers)) !== 4 ||
+            array_diff(self::HEADERS, $headers)
+        ) {
             throw new \moodle_exception('csvmissingcolumns', 'local_evalimport');
         }
         $criteria = [];
         $indices = [];
         foreach ($rows as $index => $values) {
             $rownum = $index + 2;
-            $values = array_map(static function($value) {
+            $values = array_map(static function ($value) {
                 return trim((string)$value);
             }, $values);
-            if (!array_filter($values, static function($value) {
+            $nonempty = array_filter($values, static function ($value) {
                 return $value !== '';
-            })) {
+            });
+            if (!$nonempty) {
                 continue;
             }
             if (count($values) !== 4) {
@@ -123,7 +124,7 @@ class rubric_validator {
                     'criterion' => $criterion['description'], 'score' => max($scores), 'max' => $maximum,
                 ]);
             }
-            usort($criterion['levels'], static function($left, $right) {
+            usort($criterion['levels'], static function ($left, $right) {
                 return $right['score'] <=> $left['score'];
             });
             $total += max($scores);

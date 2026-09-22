@@ -28,8 +28,6 @@ namespace local_evalimport;
 use local_evalimport\local\activity_service;
 use local_evalimport\local\importer;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Integration tests against real Moodle grading tables and controllers.
  *

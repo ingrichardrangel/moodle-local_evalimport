@@ -24,8 +24,6 @@
 
 namespace local_evalimport\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Saves validated imports through Moodle's rubric controller.
  *

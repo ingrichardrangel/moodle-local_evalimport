@@ -1,4 +1,23 @@
-# Estado de validación — 0.2.0-beta1
+# Estado de validación — 0.2.0-beta2
+
+## Resultado del CI aportado: 96835402304
+
+Las diez combinaciones instalaron el entorno y superaron PHP syntax. Todas
+fallaron en Coding standards, con las mismas 20 infracciones y 7 advertencias:
+
+- Espacio después de `function` en funciones anónimas.
+- Distribución e indentación de condiciones multilínea.
+- Formato de una llamada multilínea a `html_writer::link`.
+- Guardas MOODLE_INTERNAL redundantes en cuatro clases y tres archivos de pruebas.
+
+PHPUnit, Behat y las comprobaciones posteriores no se ejecutaron en esa corrida.
+La beta2 corrige estos hallazgos; el workflow conserva `--max-warnings 0` y no
+usa `continue-on-error`. Tras una instalación exitosa, cada control puede
+completarse aunque otro falle, para obtener todos los resultados en una corrida.
+La confirmación de que los controles pasan requiere ejecutar el CI actualizado.
+
+El usuario informó que la prueba manual de funcionamiento no mostró errores.
+Esto no sustituye las pruebas automatizadas pendientes.
 
 ## Realizado durante la preparación
 
@@ -39,8 +58,8 @@
    por `MOODLE_503_STABLE` cuando exista esa rama.
 7. Confirmar plazo Early bird y publicar el paquete validado en Moodle.
 
-No se ha ejecutado un servidor Moodle, PHPUnit, Behat ni GitHub Actions durante
-esta preparación. Los resultados de análisis estático no sustituyen estas pruebas.
+El CI proporcionado sí ejecutó la instalación y lint en sus diez entornos.
+Localmente no se ejecutó un servidor Moodle, PHPUnit ni Behat. Los resultados de análisis estático no sustituyen estas pruebas.
 No se ha publicado ni concedido ninguna insignia.
 
 Las notas oficiales de requisitos de base de datos de 5.3 presentaban diferencias

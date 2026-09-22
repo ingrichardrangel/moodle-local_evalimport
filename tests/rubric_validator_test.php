@@ -27,8 +27,6 @@ namespace local_evalimport;
 
 use local_evalimport\local\rubric_validator;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Validation regression tests.
  *

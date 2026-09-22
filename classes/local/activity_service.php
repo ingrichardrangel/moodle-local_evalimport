@@ -24,8 +24,6 @@
 
 namespace local_evalimport\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Resolves supported activities without changing grading configuration.
  *
@@ -75,8 +73,10 @@ class activity_service {
         if (!$cm->uservisible || !has_capability('moodle/grade:managegradingforms', $cm->context)) {
             return false;
         }
-        if (groups_get_activity_groupmode($cm) === SEPARATEGROUPS &&
-                !has_capability('moodle/site:accessallgroups', $cm->context)) {
+        if (
+            groups_get_activity_groupmode($cm) === SEPARATEGROUPS &&
+            !has_capability('moodle/site:accessallgroups', $cm->context)
+        ) {
             $groups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
             if (!$groups) {
                 return false;

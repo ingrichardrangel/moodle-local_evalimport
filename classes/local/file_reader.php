@@ -24,8 +24,6 @@
 
 namespace local_evalimport\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Reads supported files into the same four-column row structure.
  *
@@ -156,8 +154,10 @@ class file_reader {
             if (!$sheet || $sheet->getMergeCells()) {
                 throw new \moodle_exception('mergedcells', 'local_evalimport');
             }
-            if ($sheet->getHighestRow() > self::MAX_ROWS + 1 ||
-                    \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheet->getHighestColumn()) > 4) {
+            if (
+                $sheet->getHighestRow() > self::MAX_ROWS + 1 ||
+                \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheet->getHighestColumn()) > 4
+            ) {
                 throw new \moodle_exception('workbookdimensions', 'local_evalimport');
             }
             $rows = [];
@@ -172,8 +172,10 @@ class file_reader {
                     if ($value instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) {
                         $value = $value->getPlainText();
                     }
-                    if (is_bool($value) || ($column === 'D' &&
-                            \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell))) {
+                    if (
+                        is_bool($value) || ($column === 'D' &&
+                        \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell))
+                    ) {
                         throw new \moodle_exception('invalidcell', 'local_evalimport', '', $column . $number);
                     }
                     $row[] = $value === null ? '' : (string)$value;
