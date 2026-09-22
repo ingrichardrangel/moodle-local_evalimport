@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.0-beta3 — 2026-09-22
+
+- Fix XLS support: Moodle removes the XLS/OLE components from its bundled
+  PhpSpreadsheet. Include an isolated SimpleXLS reader, its MIT licence and
+  third-party declaration; reject formulas, errors, booleans, merged cells,
+  excessive dimensions and cyclic OLE chains. Preserve raw numeric values.
+- Load Moodle excellib explicitly for XLSX imports and templates on 4.1–4.4.
+- Ship genuine English/Spanish XLS templates without relying on the missing writer.
+- Fix the native-draft test to obtain area ID from the grading controller.
+- Fix the groups test to enrol an editing teacher, explicitly deny/allow
+  accessallgroups, and refresh module visibility after membership changes.
+- Add coverage attributes for PHPUnit 11 while retaining PHP 7.4/PHPUnit 9 support.
+- Preserve technical workbook exceptions as debug information, keeping the
+  translated user-facing message. Add XLS regression cases and template checks.
+- Full Moodle PHPUnit and Behat confirmation remains pending in GitHub Actions.
+
 ## 0.2.0-beta2 — 2026-09-22
 
 - Fix all coding-standard violations reported in CI run 96835402304:

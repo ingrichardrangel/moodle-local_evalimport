@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<libraries>
+  <library>
+    <location>vendor/simplexls</location>
+    <name>SimpleXLS</name>
+    <version>master-20260922-local1</version>
+    <license>MIT</license>
+    <licenseversion></licenseversion>
+  </library>
+</libraries>

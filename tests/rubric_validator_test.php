@@ -36,6 +36,7 @@ use local_evalimport\local\rubric_validator;
  * @copyright  2026 Richard Rangel
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\rubric_validator::class)]
 final class rubric_validator_test extends \advanced_testcase {
     /**
      * Numeric-looking criterion names are preserved and grouped without key conversion.

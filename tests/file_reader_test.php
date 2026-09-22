@@ -38,6 +38,8 @@ use local_evalimport\local\rubric_validator;
  * @copyright  2026 Richard Rangel
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\file_reader::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\rubric_validator::class)]
 final class file_reader_test extends \advanced_testcase {
     /**
      * The original CSV, XLS and XLSX fixtures must normalise identically.
@@ -158,6 +160,98 @@ final class file_reader_test extends \advanced_testcase {
         $this->setUser($other);
         $this->expectException(\moodle_exception::class);
         file_reader::draft_file($file->get_itemid());
+    }
+
+    /**
+     * Reject formula XLS input with a controlled validation error.
+     *
+     * @return void
+     */
+    public function test_xls_formula_is_rejected(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        try {
+            file_reader::read($this->fixture('formula.xls'));
+            $this->fail('Invalid XLS accepted');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame('formulanotallowed', $exception->errorcode);
+        }
+    }
+
+    /**
+     * Reject merged XLS input with a controlled validation error.
+     *
+     * @return void
+     */
+    public function test_xls_merged_is_rejected(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        try {
+            file_reader::read($this->fixture('merged.xls'));
+            $this->fail('Invalid XLS accepted');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame('mergedcells', $exception->errorcode);
+        }
+    }
+
+    /**
+     * Reject boolean XLS input with a controlled validation error.
+     *
+     * @return void
+     */
+    public function test_xls_boolean_is_rejected(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        try {
+            file_reader::read($this->fixture('boolean.xls'));
+            $this->fail('Invalid XLS accepted');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame('invalidcell', $exception->errorcode);
+        }
+    }
+
+    /**
+     * Reject cyclic XLS input with a controlled validation error.
+     *
+     * @return void
+     */
+    public function test_xls_cyclic_is_rejected(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        try {
+            file_reader::read($this->fixture('cyclic.xls'));
+            $this->fail('Invalid XLS accepted');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame('invalidworkbook', $exception->errorcode);
+        }
+    }
+
+    /**
+     * XLS selects Rubrica and reads numeric values independently of formatting.
+     *
+     * @return void
+     */
+    public function test_xls_sheet_selection_and_numeric_values(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $expected = rubric_validator::validate(file_reader::read($this->fixture('rubric.csv')), 20.0);
+        foreach (['multiple-sheets.xls', 'numeric-format.xls'] as $name) {
+            $actual = rubric_validator::validate(file_reader::read($this->fixture($name)), 20.0);
+            $this->assertSame($expected, $actual, $name);
+        }
+    }
+
+    /**
+     * Both downloadable XLS templates can be imported as twenty-point rubrics.
+     *
+     * @return void
+     */
+    public function test_xls_templates_are_importable(): void {
+        $this->resetAfterTest();
+        foreach (['en', 'es'] as $language) {
+            $rows = \local_evalimport\local\xls_reader::read(__DIR__ . '/../templates/rubric-' . $language . '.xls');
+            $this->assertCount(2, rubric_validator::validate($rows, 20.0));
+        }
     }
 
     /**

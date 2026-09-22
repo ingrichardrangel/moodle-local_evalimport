@@ -38,6 +38,8 @@ use local_evalimport\local\importer;
  * @copyright  2026 Richard Rangel
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\activity_service::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\importer::class)]
 final class importer_test extends \advanced_testcase {
     /**
      * Preview never creates a grading area or definition.
@@ -77,7 +79,7 @@ final class importer_test extends \advanced_testcase {
             $this->assertCount(3, $criterion['levels']);
         }
         $this->assertSame('rubric', $manager->get_active_method());
-        $this->assertEquals(1, $DB->count_records('grading_definitions', ['areaid' => $definition->areaid]));
+        $this->assertEquals(1, $DB->count_records('grading_definitions', ['areaid' => $controller->get_areaid()]));
         // The imported definition can be opened and made ready through the native editor API.
         $editable = $controller->get_definition_for_editing();
         $editable->status = \gradingform_controller::DEFINITION_STATUS_READY;
@@ -196,11 +198,13 @@ final class importer_test extends \advanced_testcase {
      * @return void
      */
     public function test_group_access_with_and_without_override(): void {
+        global $DB;
         $this->resetAfterTest();
         [$course, $activity] = $this->setup_activity('assign', 20, SEPARATEGROUPS);
         $teacher = $this->getDataGenerator()->create_user();
-        $roleid = $this->getDataGenerator()->create_role();
+        $roleid = $DB->get_field('role', 'id', ['shortname' => 'editingteacher'], MUST_EXIST);
         $context = \context_course::instance($course->id);
+        assign_capability('moodle/site:accessallgroups', CAP_PREVENT, $roleid, $context->id);
         assign_capability('local/evalimport:view', CAP_ALLOW, $roleid, $context->id);
         assign_capability('moodle/grade:managegradingforms', CAP_ALLOW, $roleid, $context->id);
         $this->getDataGenerator()->enrol_user($teacher->id, $course->id, $roleid);
@@ -208,8 +212,11 @@ final class importer_test extends \advanced_testcase {
         $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
         $group = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
         groups_add_member($group, $teacher);
+        get_fast_modinfo($course, 0, true);
         $this->assertArrayHasKey($activity->cmid, activity_service::options($course));
         groups_remove_member($group, $teacher);
+        get_fast_modinfo($course, 0, true);
+        $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
         assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $roleid, $context->id);
         accesslib_clear_all_caches_for_unit_testing();
         $this->assertArrayHasKey($activity->cmid, activity_service::options($course));

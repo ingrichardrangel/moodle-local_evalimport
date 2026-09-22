@@ -1,23 +1,31 @@
-# Estado de validación — 0.2.0-beta2
+# Estado de validación — 0.2.0-beta3
 
-## Resultado del CI aportado: 96835402304
+## Resultado del CI aportado: 96845583544
 
-Las diez combinaciones instalaron el entorno y superaron PHP syntax. Todas
-fallaron en Coding standards, con las mismas 20 infracciones y 7 advertencias:
+Las diez combinaciones fallan en PHPUnit. Los fallos identificados son:
 
-- Espacio después de `function` en funciones anónimas.
-- Distribución e indentación de condiciones multilínea.
-- Formato de una llamada multilínea a `html_writer::link`.
-- Guardas MOODLE_INTERNAL redundantes en cuatro clases y tres archivos de pruebas.
+- XLS: los componentes XLS/OLE no se distribuyen con el PhpSpreadsheet de Moodle.
+- XLSX en 4.1–4.4: faltaba cargar el autoloader mediante excellib.
+- Guardado nativo: la prueba consultaba una propiedad areaid inexistente;
+  ahora utiliza get_areaid() del controlador.
+- Grupos: la prueba usaba un rol vacío; ahora utiliza docente con edición,
+  controla accessallgroups y refresca la caché tras cambiar la membresía.
+- PHPUnit 11: anotaciones de cobertura obsoletas; se agregaron atributos.
 
-PHPUnit, Behat y las comprobaciones posteriores no se ejecutaron en esa corrida.
-La beta2 corrige estos hallazgos; el workflow conserva `--max-warnings 0` y no
-usa `continue-on-error`. Tras una instalación exitosa, cada control puede
-completarse aunque otro falle, para obtener todos los resultados en una corrida.
-La confirmación de que los controles pasan requiere ejecutar el CI actualizado.
+La beta3 corrige estos puntos y mantiene obligatorias las comprobaciones del CI.
+No se declara aún que PHPUnit o Behat pasen: requieren una nueva ejecución
+con Moodle y base de datos.
 
-El usuario informó que la prueba manual de funcionamiento no mostró errores.
-Esto no sustituye las pruebas automatizadas pendientes.
+## Comprobaciones locales de beta3
+
+- Lint de los 22 archivos PHP en PHP 7.4.33 y 8.4.25: correcto.
+- Lectura XLS equivalente a CSV, selección de Rubrica y valores numéricos
+  con formato: correctos en ambos runtimes.
+- Fórmulas, celdas combinadas, booleanos y cadenas OLE cíclicas: rechazados.
+- Plantillas XLS EN/ES: importables como rúbricas de 20 puntos.
+- Entrada pública del lector y limpieza de archivos temporales: correctas.
+- Estas comprobaciones usan runtimes WebAssembly y sustitutos mínimos de
+  Moodle. No equivalen a PHPUnit de integración ni a Behat.
 
 ## Realizado durante la preparación
 
@@ -58,7 +66,7 @@ Esto no sustituye las pruebas automatizadas pendientes.
    por `MOODLE_503_STABLE` cuando exista esa rama.
 7. Confirmar plazo Early bird y publicar el paquete validado en Moodle.
 
-El CI proporcionado sí ejecutó la instalación y lint en sus diez entornos.
+El CI proporcionado ejecutó PHPUnit en sus diez entornos, con los fallos descritos.
 Localmente no se ejecutó un servidor Moodle, PHPUnit ni Behat. Los resultados de análisis estático no sustituyen estas pruebas.
 No se ha publicado ni concedido ninguna insignia.
 

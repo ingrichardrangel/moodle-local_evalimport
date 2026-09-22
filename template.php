@@ -48,7 +48,11 @@ if ($format === 'csv') {
         fputcsv($stream, $row, ',', '"', '');
     }
     fclose($stream);
+} else if ($format === 'xls') {
+    $language = substr(current_language(), 0, 2) === 'es' ? 'es' : 'en';
+    copy(__DIR__ . '/templates/rubric-' . $language . '.xls', $path);
 } else {
+    require_once($CFG->libdir . '/excellib.class.php');
     $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
     $sheet = $book->getActiveSheet();
     $sheet->setTitle('Rubrica');
@@ -59,7 +63,7 @@ if ($format === 'csv') {
     }
     $sheet->getStyle('A1:D7')->getAlignment()->setWrapText(true);
     $sheet->freezePane('A2');
-    \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book, $format === 'xls' ? 'Xls' : 'Xlsx')->save($path);
+    \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book, 'Xlsx')->save($path);
     $book->disconnectWorksheets();
 }
 send_temp_file($path, 'rubric-template.' . $format);

@@ -116,19 +116,24 @@ class file_reader {
     }
 
     /**
-     * Read a real XLS/XLSX workbook using Moodle's bundled PhpSpreadsheet.
+     * Read a real XLS/XLSX workbook using its format-specific reader.
      *
      * @param string $path Local temporary path.
      * @param string $extension Expected file type.
      * @return array
      */
     private static function spreadsheet(string $path, string $extension): array {
+        global $CFG;
         $book = null;
         try {
+            if ($extension === 'xls') {
+                return xls_reader::read($path);
+            }
+            require_once($CFG->libdir . '/excellib.class.php');
             if ($extension === 'xlsx') {
                 self::check_archive($path);
             }
-            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($extension === 'xls' ? 'Xls' : 'Xlsx');
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
             if (!$reader->canRead($path)) {
                 throw new \moodle_exception('invalidworkbook', 'local_evalimport');
             }
@@ -186,7 +191,8 @@ class file_reader {
         } catch (\moodle_exception $exception) {
             throw $exception;
         } catch (\Throwable $exception) {
-            throw new \moodle_exception('invalidworkbook', 'local_evalimport');
+            throw new \moodle_exception('invalidworkbook', 'local_evalimport', '', null,
+                get_class($exception) . ': ' . $exception->getMessage());
         } finally {
             if ($book !== null) {
                 $book->disconnectWorksheets();

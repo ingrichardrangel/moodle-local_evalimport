@@ -1,6 +1,6 @@
 # Evaluation Instrument Importer
 
-`local_evalimport` — **0.2.0-beta2**
+`local_evalimport` — **0.2.0-beta3**
 
 Import Moodle rubrics from **CSV, XLS or XLSX** with a four-column format shared
 with the Chrome rubric importer. Supports assignments and whole-forum grading.
@@ -18,7 +18,8 @@ version has already passed CI. See [VALIDATION.md](VALIDATION.md).
 4. Open a course as an editing teacher and select **Import evaluation instrument**.
 
 No new database tables or data migration are required. Existing rubrics and
-settings are retained. Spreadsheet support uses Moodle's bundled PhpSpreadsheet;
+settings are retained. XLSX uses Moodle's bundled PhpSpreadsheet; XLS uses the bundled MIT-licensed
+SimpleXLS reader with local validation and parsing bounds;
 there is no plugin-specific Composer installation or external service.
 
 ## Teacher workflow
@@ -26,6 +27,7 @@ there is no plugin-specific Composer installation or external service.
 1. Configure a positive numeric maximum grade for the activity. In a forum,
    enable **whole forum grading**; post ratings are not the target.
 2. Download a CSV, XLS or XLSX template from the importer. Templates total 20 points.
+   XLS templates are prebuilt in English and Spanish; other languages use English.
 3. Fill in the four columns, repeating the criterion on every level row.
 4. Choose the target activity and upload the file.
 5. Select **Preview rubric**. This does not modify the grading configuration.
