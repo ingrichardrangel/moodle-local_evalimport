@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Rubric file upload form.
+ * Rubric import confirmation form.
  *
  * @package    local_evalimport
  * @copyright  2026 Richard Rangel
@@ -30,31 +30,24 @@ global $CFG;
 require_once($CFG->libdir . '/formslib.php');
 
 /**
- * Upload and target selection form.
+ * Confirmation submits only an opaque reference to the server-side preview.
  *
  * @package    local_evalimport
  * @copyright  2026 Richard Rangel
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class import_form extends \moodleform {
+class confirm_form extends \moodleform {
     /**
-     * Define form controls.
+     * Define confirmation controls.
      *
      * @return void
      */
     public function definition(): void {
         $mform = $this->_form;
-        $mform->addElement('select', 'cmid', get_string('selectactivity', 'local_evalimport'), $this->_customdata['activities']);
-        $mform->setType('cmid', PARAM_INT);
-        $mform->addRule('cmid', null, 'required', null, 'server');
-        $mform->addElement('filepicker', 'rubricfile', get_string('choosefile', 'local_evalimport'), null, [
-            'accepted_types' => ['.csv', '.xls', '.xlsx'],
-            'maxbytes' => \local_evalimport\local\file_reader::MAX_BYTES,
-            'subdirs' => 0,
-        ]);
-        $mform->addRule('rubricfile', null, 'required', null, 'server');
         $mform->addElement('hidden', 'id', $this->_customdata['courseid']);
         $mform->setType('id', PARAM_INT);
-        $this->add_action_buttons(true, get_string('previewimport', 'local_evalimport'));
+        $mform->addElement('hidden', 'token', $this->_customdata['token']);
+        $mform->setType('token', PARAM_ALPHANUM);
+        $this->add_action_buttons(true, get_string('confirmimport', 'local_evalimport'));
     }
 }
