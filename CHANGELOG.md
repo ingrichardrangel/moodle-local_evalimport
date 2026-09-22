@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.0-beta4 — 2026-09-23
+
+- Correct the remaining PHPUnit failure in all ten CI jobs by making the group
+  test explicitly configure separate groups and prohibit `accessallgroups`
+  while testing membership restrictions. Moodle capability caches are reset
+  after each permission change.
+- Preserve PHPUnit 11 coverage attributes while placing the class docblocks
+  where Moodle CodeSniffer can associate them with all test methods.
+- Fix the multiline exception constructor reported by CodeSniffer.
+- Document the two inherited SimpleXLS method names that must retain upstream
+  camel case and use Moodle-compliant names for their local parameters.
+- Update checkout and setup-node to their Node 24 based v5 actions, disabling
+  unused automatic package-manager caching, to remove runner deprecation warnings.
+- The supplied CI run completed 30 tests in every environment; 29 passed and
+  only the group setup assertion failed. A new run is required for confirmation.
+
 ## 0.2.0-beta3 — 2026-09-22
 
 - Fix XLS support: Moodle removes the XLS/OLE components from its bundled

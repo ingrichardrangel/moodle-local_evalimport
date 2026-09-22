@@ -28,6 +28,9 @@ namespace local_evalimport;
 use local_evalimport\local\activity_service;
 use local_evalimport\local\importer;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\activity_service::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\importer::class)]
+
 /**
  * Integration tests against real Moodle grading tables and controllers.
  *
@@ -38,8 +41,6 @@ use local_evalimport\local\importer;
  * @copyright  2026 Richard Rangel
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\activity_service::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\importer::class)]
 final class importer_test extends \advanced_testcase {
     /**
      * Preview never creates a grading area or definition.
@@ -204,10 +205,12 @@ final class importer_test extends \advanced_testcase {
         $teacher = $this->getDataGenerator()->create_user();
         $roleid = $DB->get_field('role', 'id', ['shortname' => 'editingteacher'], MUST_EXIST);
         $context = \context_course::instance($course->id);
-        assign_capability('moodle/site:accessallgroups', CAP_PREVENT, $roleid, $context->id);
+        // Prohibit guarantees that another assigned role cannot grant this capability.
+        assign_capability('moodle/site:accessallgroups', CAP_PROHIBIT, $roleid, $context->id);
         assign_capability('local/evalimport:view', CAP_ALLOW, $roleid, $context->id);
         assign_capability('moodle/grade:managegradingforms', CAP_ALLOW, $roleid, $context->id);
         $this->getDataGenerator()->enrol_user($teacher->id, $course->id, $roleid);
+        accesslib_clear_all_caches_for_unit_testing();
         $this->setUser($teacher);
         $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
         $group = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
@@ -217,7 +220,7 @@ final class importer_test extends \advanced_testcase {
         groups_remove_member($group, $teacher);
         get_fast_modinfo($course, 0, true);
         $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
-        assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $roleid, $context->id);
+        assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $roleid, $context->id, true);
         accesslib_clear_all_caches_for_unit_testing();
         $this->assertArrayHasKey($activity->cmid, activity_service::options($course));
     }
@@ -244,6 +247,10 @@ final class importer_test extends \advanced_testcase {
             $settings['grade'] = $maximum;
         }
         $activity = $this->getDataGenerator()->create_module($module, $settings);
+        if ($groupmode !== NOGROUPS) {
+            set_coursemodule_groupmode($activity->cmid, $groupmode);
+            get_fast_modinfo($course, 0, true);
+        }
         $file = get_file_storage()->create_file_from_pathname([
             'contextid' => \context_user::instance($USER->id)->id,
             'component' => 'user', 'filearea' => 'draft', 'itemid' => file_get_unused_draft_itemid(),

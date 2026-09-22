@@ -1,4 +1,21 @@
-# Estado de validación — 0.2.0-beta3
+# Estado de validación — 0.2.0-beta4
+
+## Resultado del CI aportado: 96931327496
+
+Las diez combinaciones ejecutaron los 30 tests. En cada una pasaron 29 y falló
+únicamente la primera aserción del escenario de grupos. El lector CSV/XLS/XLSX,
+las plantillas, la validación y la persistencia nativa pasaron en Moodle
+4.1–5.3 beta con PHP 7.4–8.4 y MariaDB/PostgreSQL.
+
+CodeSniffer encontró una llamada multilínea, dos nombres de métodos heredados y
+la pérdida de asociación entre los docblocks de cobertura y las clases de
+prueba. La beta4 corrige esos hallazgos y hace explícita la configuración de
+grupos/permisos de la prueba restante. Se requiere una nueva ejecución para
+confirmar la matriz completa.
+
+Los avisos del runner por `actions/checkout@v4` y `actions/setup-node@v4` se
+atienden actualizando ambas acciones a v5. Los mensajes periódicos de salud de
+los servicios PostgreSQL/MariaDB no causaron fallos de pasos.
 
 ## Resultado del CI aportado: 96845583544
 

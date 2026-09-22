@@ -35,6 +35,8 @@ require_once(__DIR__ . '/../../vendor/simplexls/SimpleXLS.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class xls_reader extends \local_evalimport_vendor\SimpleXLS {
+    // The method name is fixed by the inherited SimpleXLS API.
+    // phpcs:disable moodle.NamingConventions.ValidFunctionName.LowercaseMethod
     /**
      * Convert the selected worksheet to unformatted values.
      *
@@ -89,6 +91,7 @@ class xls_reader extends \local_evalimport_vendor\SimpleXLS {
      * @return bool
      */
     protected function parseSheet($spos) {
+        // phpcs:enable moodle.NamingConventions.ValidFunctionName.LowercaseMethod
         $selected = array_search('Rubrica', array_column($this->boundsheets, 'name'), true);
         $selected = $selected === false ? 0 : $selected;
         if ($this->sn !== $selected) {
@@ -129,6 +132,8 @@ class xls_reader extends \local_evalimport_vendor\SimpleXLS {
         return parent::parseSheet($spos);
     }
 
+    // The method name is fixed by the inherited SimpleXLS API.
+    // phpcs:disable moodle.NamingConventions.ValidFunctionName.LowercaseMethod
     /**
      * Bound sparse cell allocations, regardless of the DIMENSION record.
      *
@@ -136,13 +141,14 @@ class xls_reader extends \local_evalimport_vendor\SimpleXLS {
      * @param int $col Zero-based column.
      * @param mixed $string Display value.
      * @param mixed $raw Raw value.
-     * @param int $type_code BIFF record type.
-     * @param string $type_alias Cell type.
+     * @param int $typecode BIFF record type.
+     * @param string $typealias Cell type.
      */
-    protected function addCell($row, $col, $string, $raw = '', $type_code = 0, $type_alias = '') {
+    protected function addCell($row, $col, $string, $raw = '', $typecode = 0, $typealias = '') {
+        // phpcs:enable moodle.NamingConventions.ValidFunctionName.LowercaseMethod
         if ($row > file_reader::MAX_ROWS || $col > 3) {
             throw new \moodle_exception('workbookdimensions', 'local_evalimport');
         }
-        parent::addCell($row, $col, $string, $raw, $type_code, $type_alias);
+        parent::addCell($row, $col, $string, $raw, $typecode, $typealias);
     }
 }

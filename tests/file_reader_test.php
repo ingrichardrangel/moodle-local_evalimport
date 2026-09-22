@@ -28,6 +28,9 @@ namespace local_evalimport;
 use local_evalimport\local\file_reader;
 use local_evalimport\local\rubric_validator;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\file_reader::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\rubric_validator::class)]
+
 /**
  * File format regression tests.
  *
@@ -38,8 +41,6 @@ use local_evalimport\local\rubric_validator;
  * @copyright  2026 Richard Rangel
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\file_reader::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\rubric_validator::class)]
 final class file_reader_test extends \advanced_testcase {
     /**
      * The original CSV, XLS and XLSX fixtures must normalise identically.

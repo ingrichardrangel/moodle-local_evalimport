@@ -191,8 +191,13 @@ class file_reader {
         } catch (\moodle_exception $exception) {
             throw $exception;
         } catch (\Throwable $exception) {
-            throw new \moodle_exception('invalidworkbook', 'local_evalimport', '', null,
-                get_class($exception) . ': ' . $exception->getMessage());
+            throw new \moodle_exception(
+                'invalidworkbook',
+                'local_evalimport',
+                '',
+                null,
+                get_class($exception) . ': ' . $exception->getMessage()
+            );
         } finally {
             if ($book !== null) {
                 $book->disconnectWorksheets();
