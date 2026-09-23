@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0-beta6 — 2026-09-23
+
+- Normalise Moodle's database-backed group mode value to an integer in the
+  PHPUnit precondition. Some versions return `'1'` while `SEPARATEGROUPS` is
+  the integer `1`; the values represent the same mode.
+- No production behaviour or import format changes.
+
 ## 0.2.0-beta5 — 2026-09-23
 
 - Make the separate-groups PHPUnit scenario independent from Moodle's

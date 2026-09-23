@@ -1,4 +1,11 @@
-# Estado de validación — 0.2.0-beta5
+# Estado de validación — 0.2.0-beta6
+
+## Corrección posterior de PHPUnit
+
+La beta5 confirmó que la prueba alcanzaba sus nuevas precondiciones, pero
+Moodle devolvió el modo de grupo como la cadena `'1'`. La comparación estricta
+contra la constante entera `SEPARATEGROUPS` produjo el único fallo. La beta6
+normaliza el valor a entero antes de compararlo. No cambia código de producción.
 
 ## Resultado del CI aportado: 96935171680
 
