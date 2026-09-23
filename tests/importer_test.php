@@ -199,19 +199,23 @@ final class importer_test extends \advanced_testcase {
      * @return void
      */
     public function test_group_access_with_and_without_override(): void {
-        global $DB;
         $this->resetAfterTest();
         [$course, $activity] = $this->setup_activity('assign', 20, SEPARATEGROUPS);
         $teacher = $this->getDataGenerator()->create_user();
-        $roleid = $DB->get_field('role', 'id', ['shortname' => 'editingteacher'], MUST_EXIST);
+        $roleid = $this->getDataGenerator()->create_role();
         $context = \context_course::instance($course->id);
-        // Prohibit guarantees that another assigned role cannot grant this capability.
-        assign_capability('moodle/site:accessallgroups', CAP_PROHIBIT, $roleid, $context->id);
+        assign_capability('moodle/course:view', CAP_ALLOW, $roleid, $context->id);
+        assign_capability('mod/assign:view', CAP_ALLOW, $roleid, $context->id);
         assign_capability('local/evalimport:view', CAP_ALLOW, $roleid, $context->id);
         assign_capability('moodle/grade:managegradingforms', CAP_ALLOW, $roleid, $context->id);
         $this->getDataGenerator()->enrol_user($teacher->id, $course->id, $roleid);
         accesslib_clear_all_caches_for_unit_testing();
         $this->setUser($teacher);
+        $cm = get_fast_modinfo($course)->get_cm($activity->cmid);
+        $this->assertSame(SEPARATEGROUPS, groups_get_activity_groupmode($cm));
+        $this->assertTrue($cm->uservisible);
+        $this->assertTrue(has_capability('moodle/grade:managegradingforms', $cm->context));
+        $this->assertFalse(has_capability('moodle/site:accessallgroups', $cm->context));
         $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
         $group = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
         groups_add_member($group, $teacher);
@@ -220,7 +224,7 @@ final class importer_test extends \advanced_testcase {
         groups_remove_member($group, $teacher);
         get_fast_modinfo($course, 0, true);
         $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
-        assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $roleid, $context->id, true);
+        assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $roleid, $context->id);
         accesslib_clear_all_caches_for_unit_testing();
         $this->assertArrayHasKey($activity->cmid, activity_service::options($course));
     }

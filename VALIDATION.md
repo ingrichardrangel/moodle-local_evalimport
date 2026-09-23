@@ -1,4 +1,14 @@
-# Estado de validación — 0.2.0-beta4
+# Estado de validación — 0.2.0-beta5
+
+## Resultado del CI aportado: 96935171680
+
+Coding standards quedó correcto en toda la matriz. Las diez combinaciones
+ejecutaron 30 tests: pasaron 29 y falló únicamente el escenario de grupos al
+usar el arquetipo `editingteacher`, cuyos permisos heredados impedían aislar
+`accessallgroups`. La beta5 crea un rol específico para la prueba y verifica
+primero sus precondiciones de modo de grupo y capacidades.
+
+Se requiere una nueva ejecución para confirmar PHPUnit en la matriz completa.
 
 ## Resultado del CI aportado: 96931327496
 

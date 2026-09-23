@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0-beta5 — 2026-09-23
+
+- Make the separate-groups PHPUnit scenario independent from Moodle's
+  `editingteacher` archetype. The test now uses a dedicated role containing
+  only course view, assignment view and rubric-management capabilities.
+- Assert the effective group mode and absence of `accessallgroups` before
+  testing activity discovery, so the fixture itself is verified explicitly.
+- The CI run 96935171680 passed Coding standards and 29 of 30 PHPUnit tests in
+  all ten jobs. The group-role fixture was the only failure.
+
 ## 0.2.0-beta4 — 2026-09-23
 
 - Correct the remaining PHPUnit failure in all ten CI jobs by making the group
