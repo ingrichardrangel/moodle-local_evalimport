@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for local_evalimport.
+ * Behat navigation steps.
  *
  * @package    local_evalimport
  * @copyright  2026 Richard Rangel
@@ -24,8 +24,26 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_evalimport';
-$plugin->version = 2026092304;
-$plugin->requires = 2022112800;
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.0.0';
+global $CFG;
+require_once($CFG->libdir . '/behat/behat_base.php');
+
+/**
+ * Course navigation independent of theme-specific menus.
+ *
+ * @package    local_evalimport
+ * @copyright  2026 Richard Rangel
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class behat_local_evalimport extends behat_base {
+    /**
+     * Open the course importer.
+     *
+     * @Given /^I open the rubric importer for course "([^"]*)"$/
+     * @param string $shortname Course short name.
+     */
+    public function i_open_the_rubric_importer_for_course(string $shortname): void {
+        global $DB;
+        $course = $DB->get_record('course', ['shortname' => $shortname], '*', MUST_EXIST);
+        $this->getSession()->visit($this->locate_path('/local/evalimport/import.php?id=' . $course->id));
+    }
+}

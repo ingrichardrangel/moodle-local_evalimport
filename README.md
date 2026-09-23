@@ -1,176 +1,90 @@
-Evaluation Instrument Importer (local_evalimport)
-
-Evaluation Instrument Importer is a Moodle plugin that allows teachers to import rubric-based evaluation instruments from a CSV file directly into course activities.
-
-This tool simplifies the creation of advanced grading rubrics by allowing instructors to prepare their evaluation instruments externally (for example in Excel or Google Sheets) and import them into Moodle in seconds.
-
-The plugin integrates directly into the course administration menu, allowing teachers to select an activity and import a rubric without navigating through Moodle's advanced grading interface.
-
-PLUGIN FEATURES
-
-Import rubrics from CSV files
-
-Integrated directly into the course interface
-
-Works inside the course context
-
-Supports Assignment and Forum activities
-
-Automatically validates rubric structure
-
-Prevents importing if a rubric already exists
-
-Verifies compatibility with the activity maximum grade
-
-Respects activity visibility restrictions
-
-Respects group and grouping restrictions
-
-Allows teachers to go directly to Advanced Grading after import
-
-SUPPORTED ACTIVITIES
-
-Currently supported modules:
-
-Assignment (mod_assign)
-Forum (mod_forum)
-
-Future versions may support additional activities compatible with advanced grading.
-
-HOW IT WORKS
-
-Open the course.
-
-In the course navigation menu click:
-
-Import evaluation instrument
-
-Select the activity where the rubric will be applied.
-
-Upload the CSV file containing the rubric definition.
-
-Click Import.
-
-If the import succeeds the teacher can:
-
-Go directly to Advanced grading to review the rubric.
-
-Continue importing additional evaluation instruments.
-
-CSV FILE FORMAT
-
-The CSV file must contain the following four columns:
-
-criterion, level, level_description, score
-
-Column description:
-
-criterion
-Name of the rubric criterion.
-
-level
-Name of the rubric level.
-
-level_description
-Description that will appear in the rubric.
-
-score
-Numeric score assigned to the level.
-
-CSV EXAMPLE
-
-criterion,level,level_description,score
-Argumentation,Excellent,Clear and well-supported argument,10
-Argumentation,Good,Argument mostly supported,7
-Argumentation,Weak,Limited argument support,4
-Argumentation,Poor,Argument missing or incorrect,0
-Structure,Excellent,Well structured and organized,10
-Structure,Good,Mostly structured,7
-Structure,Weak,Some organization problems,4
-Structure,Poor,No clear structure,0
-
-Each criterion can contain multiple levels.
-
-The highest score within each criterion contributes to the total rubric score.
-
-VALIDATION RULES
-
-The plugin performs several validations during import.
-
-Existing rubric validation
-Import will fail if the activity already contains a rubric.
-
-Maximum grade validation
-The sum of the highest score of each criterion must match the maximum grade of the activity.
-
-Example:
-
-Activity maximum grade = 20
-
-Criterion A max score = 10
-Criterion B max score = 10
-Total = 20 (valid)
-
-Duplicate score validation
-Scores cannot be duplicated within the same criterion.
-
-Example of invalid configuration:
-
-Criterion A
-Level 1 = 5
-Level 2 = 5
-
-Optional administrator validations
-
-Administrators can configure additional validation rules such as:
-
-Maximum allowed level score
-
-Minimum level score requirement per criterion
-
-These settings can be configured in:
-
-Site administration → Plugins → Local plugins → Evaluation instrument importer
-
-PERMISSIONS
-
-Users must have the capability:
-
-moodle/grade:managegradingforms
-
-This capability is typically available to editing teachers.
-
-The plugin also respects:
-
-Activity visibility
-
-Group restrictions
-
-Groupings
-
-Availability restrictions
-
-INSTALLATION
-
-Download or clone the plugin.
-
-Place the plugin folder in:
-
-/local/evalimport
-
-Visit:
-
-Site administration → Notifications
-
-Complete the installation process.
-
-PRIVACY
-
-This plugin does not store personal user data.
-
-It only reads existing course and grading information from Moodle in order to perform rubric imports.
-
-LICENSE
-
-GNU GPL v3 or later
-http://www.gnu.org/copyleft/gpl.html
+# Evaluation Instrument Importer
+
+`local_evalimport` lets teachers create Moodle rubrics from CSV, XLS or XLSX
+files using a simple four-column format. It supports graded assignments and
+whole-forum grading.
+
+## Requirements
+
+- Moodle 4.1 or later.
+- Permission to view and use the importer in the course and permission to manage
+  grading forms for the target activity.
+
+## Installation
+
+1. Copy the `evalimport` folder into Moodle's `local` directory.
+2. Sign in as an administrator and open **Site administration → Notifications**
+   to complete installation or upgrade.
+3. Open a course and choose **Import evaluation instrument**.
+
+The plugin does not create additional database tables. Existing rubrics and
+grading settings are retained.
+
+## Import a rubric
+
+1. Set a positive maximum grade for the activity. For a forum, enable whole
+   forum grading.
+2. Download a CSV, XLS or XLSX template from the importer.
+3. Complete the four columns described below. Repeat the criterion name on each
+   row that defines one of its levels.
+4. Select the activity, upload the completed file and preview the rubric.
+5. Review the criteria, descriptions and scores, then confirm the import.
+6. In Moodle's rubric editor, review the draft and select **Save rubric and
+   make it ready** when it is ready to use.
+
+The importer creates a draft for review. It does not replace an existing rubric
+or change an activity from another grading method to a rubric. Edit existing
+rubrics in Moodle's grading editor. A preview expires after 30 minutes and is
+associated with the current user session.
+
+## Spreadsheet format
+
+Use these four columns, with the exact header names shown:
+
+| criterion | level | level_description | score |
+|---|---|---|---:|
+| Argumentation | Excellent | Clear and supported arguments. | 10 |
+| Argumentation | Competent | Some weaknesses in reasoning. | 7 |
+| Argumentation | Developing | Arguments are not supported. | 0 |
+| Organisation | Excellent | Ideas are organised coherently. | 10 |
+| Organisation | Competent | Some organisation difficulties. | 7 |
+| Organisation | Developing | No clear organisation. | 0 |
+
+Column order may vary, and header case or surrounding spaces are ignored.
+Completely blank rows are skipped. Every other row must contain all four
+values. Criterion names are grouped by their text and appear in the order they
+first occur. Level labels are shown to teachers and students; the description
+contains the level's explanatory text.
+
+Each criterion must have at least two levels, with no repeated score. Levels
+are arranged from highest score to lowest score. The sum of the highest scores
+for all criteria must equal the activity's maximum grade. Scores must be
+non-negative, can have up to five decimal places and can use a decimal point or
+comma. Thousands separators and scientific notation are not supported. Text is
+imported as plain text.
+
+## Supported files and limits
+
+**CSV:** UTF-8 text, with an optional byte-order mark. Comma and semicolon
+separators are supported. Quoted fields, commas, quotation marks and
+multi-line descriptions are supported.
+
+**XLS and XLSX:** Use a regular, unencrypted Excel workbook. The importer reads
+the sheet named `Rubrica`, or the first sheet if that name is not present. Put
+the headers in the first row and use four columns. Merged cells, formulas and
+spreadsheet error values are not supported; paste formula results as values.
+
+The maximum upload size is 2 MB, with up to 2,000 data rows and 10,000
+characters per cell. XLSX files may contain up to 1,000 archive entries and
+20 MB of uncompressed content. Remove unused formatted rows and columns outside
+the rubric data.
+
+## Privacy and licensing
+
+Uploaded files are processed through Moodle's draft file storage and normal
+file-cleanup process. Rubric data is stored by Moodle's grading system. The
+plugin does not send data to external services.
+
+This plugin is distributed under the GNU General Public License, version 3 or
+later. The bundled SimpleXLS library has its own MIT license, listed in
+`thirdpartylibs.xml`.
