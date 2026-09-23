@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_evalimport';
-$plugin->version = 2026092302;
+$plugin->version = 2026092304;
 $plugin->requires = 2022112800;
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = '0.2.0-beta7';
+$plugin->maturity = MATURITY_STABLE;
+$plugin->release = '1.0.0';
