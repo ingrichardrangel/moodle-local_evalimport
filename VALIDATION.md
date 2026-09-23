@@ -1,4 +1,13 @@
-# Estado de validación — 0.2.0-beta6
+# Estado de validación — 0.2.0-beta7
+
+## Resultado del CI aportado: 96940137990
+
+Las precondiciones añadidas en beta6 pasaron: modo de grupos separados,
+actividad visible, permiso de gestión presente y `accessallgroups` ausente. El
+fallo siguiente mostró que el servicio de producción repetía la comparación
+estricta entre la cadena `'1'` devuelta por Moodle y la constante entera `1`.
+Por ello omitía la comprobación de membresía. La beta7 normaliza el valor dentro
+de `activity_service` y conserva la regresión automática.
 
 ## Corrección posterior de PHPUnit
 

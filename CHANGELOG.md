@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-beta7 — 2026-09-23
+
+- Fix separate-group enforcement in production. Moodle can return the effective
+  group mode as the database string `'1'`; the strict comparison against the
+  integer `SEPARATEGROUPS` therefore skipped the membership check.
+- Keep the PHPUnit regression test that exposed the defect. The varying array
+  key in CI is only the dynamically generated course-module ID.
+
 ## 0.2.0-beta6 — 2026-09-23
 
 - Normalise Moodle's database-backed group mode value to an integer in the

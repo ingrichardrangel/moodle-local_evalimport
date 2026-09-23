@@ -1,6 +1,6 @@
 # Evaluation Instrument Importer
 
-`local_evalimport` — **0.2.0-beta6**
+`local_evalimport` — **0.2.0-beta7**
 
 Import Moodle rubrics from **CSV, XLS or XLSX** with a four-column format shared
 with the Chrome rubric importer. Supports assignments and whole-forum grading.
