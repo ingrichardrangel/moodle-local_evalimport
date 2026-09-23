@@ -212,7 +212,7 @@ final class importer_test extends \advanced_testcase {
         accesslib_clear_all_caches_for_unit_testing();
         $this->setUser($teacher);
         $cm = get_fast_modinfo($course)->get_cm($activity->cmid);
-        $this->assertSame(SEPARATEGROUPS, groups_get_activity_groupmode($cm));
+        $this->assertSame(SEPARATEGROUPS, (int) groups_get_activity_groupmode($cm));
         $this->assertTrue($cm->uservisible);
         $this->assertTrue(has_capability('moodle/grade:managegradingforms', $cm->context));
         $this->assertFalse(has_capability('moodle/site:accessallgroups', $cm->context));
