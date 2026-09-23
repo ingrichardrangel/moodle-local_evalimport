@@ -74,7 +74,7 @@ class activity_service {
             return false;
         }
         if (
-            groups_get_activity_groupmode($cm) === SEPARATEGROUPS &&
+            (int) groups_get_activity_groupmode($cm) === SEPARATEGROUPS &&
             !has_capability('moodle/site:accessallgroups', $cm->context)
         ) {
             $groups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
