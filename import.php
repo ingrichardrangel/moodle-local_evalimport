@@ -24,6 +24,7 @@
 
 use local_evalimport\local\file_reader;
 use local_evalimport\local\importer;
+use local_evalimport\local\score_policy;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/locallib.php');
@@ -41,18 +42,29 @@ $PAGE->set_title(get_string('pageheading', 'local_evalimport'));
 $PAGE->set_heading(format_string($course->fullname));
 
 $activities = local_evalimport_get_importable_activities($course);
-$form = new \local_evalimport\form\import_form($url, ['activities' => $activities, 'courseid' => $course->id]);
+$names = [];
+$modinfo = get_fast_modinfo($course);
+foreach (array_keys($activities) as $cmid) {
+    $names[$cmid] = importer::suggested_name($modinfo->get_cm($cmid));
+}
+$canoverride = score_policy::can_override($context);
+$form = new \local_evalimport\form\import_form($url, [
+    'activities' => $activities,
+    'courseid' => $course->id,
+    'names' => $names,
+    'canoverride' => $canoverride,
+]);
 $token = optional_param('token', '', PARAM_ALPHANUM);
 $preview = null;
 $confirmform = null;
 $error = null;
 
-// Session previews contain only draft IDs and hashes, and expire after 30 minutes.
+// Keep the reviewed settings with the draft reference for 30 minutes.
 if (!isset($SESSION->local_evalimport)) {
     $SESSION->local_evalimport = [];
 }
 foreach ($SESSION->local_evalimport as $key => $pending) {
-    if ($pending['expires'] < time()) {
+    if ($pending['expires'] < time() || !isset($pending['reviewed'])) {
         unset($SESSION->local_evalimport[$key]);
     }
 }
@@ -73,7 +85,14 @@ try {
             if (!hash_equals($pending['hash'], $file->get_contenthash())) {
                 throw new moodle_exception('previewexpired', 'local_evalimport');
             }
-            $editorurl = importer::save($course, $pending['cmid'], $file);
+            $editorurl = importer::save(
+                $course,
+                $pending['cmid'],
+                $file,
+                $pending['name'],
+                $pending['overrides'],
+                $pending['reviewed']
+            );
             unset($SESSION->local_evalimport[$token]);
             redirect($editorurl, get_string('importsuccess', 'local_evalimport'), null, \core\output\notification::NOTIFY_SUCCESS);
         }
@@ -85,7 +104,14 @@ try {
     if ($data = $form->get_data()) {
         require_sesskey();
         $file = file_reader::draft_file((int)$data->rubricfile);
-        $preview = importer::preview($course, (int)$data->cmid, $file);
+        $overrides = null;
+        if ($canoverride) {
+            $overrides = [];
+            foreach (array_merge([score_policy::MASTER], score_policy::RULES) as $key) {
+                $overrides[$key] = !empty($data->$key);
+            }
+        }
+        $preview = importer::preview($course, (int)$data->cmid, $file, $data->rubricname, $overrides);
         $token = bin2hex(random_bytes(16));
         // Bound session growth when the user opens many previews.
         while (count($SESSION->local_evalimport) >= 5) {
@@ -94,10 +120,16 @@ try {
         $SESSION->local_evalimport[$token] = [
             'courseid' => (int)$course->id, 'cmid' => (int)$data->cmid,
             'draftid' => (int)$data->rubricfile, 'hash' => $file->get_contenthash(), 'expires' => time() + 1800,
+            'name' => $preview['name'],
+            'overrides' => $overrides,
+            'reviewed' => ['policy' => $preview['policy'], 'grademax' => $preview['target']['grademax']],
         ];
         $confirmform = new \local_evalimport\form\confirm_form($url, ['courseid' => $course->id, 'token' => $token]);
     }
 } catch (moodle_exception $exception) {
+    if ($token !== '' && $exception->errorcode === 'previewsettingschanged') {
+        unset($SESSION->local_evalimport[$token]);
+    }
     $error = $exception->module === 'local_evalimport' ? $exception->getMessage() : get_string('importfailed', 'local_evalimport');
     $preview = null;
 } catch (Throwable $exception) {
@@ -121,8 +153,13 @@ foreach (['xlsx', 'xls', 'csv'] as $format) {
 if ($preview !== null) {
     echo $OUTPUT->heading(get_string('previewimport', 'local_evalimport'), 3);
     echo html_writer::tag('p', s($preview['target']['cm']->name));
+    echo html_writer::tag('p', s(get_string('previewrubricname', 'local_evalimport', $preview['name'])));
+    echo local_evalimport_preview_rules($preview['policy']['rules']);
     echo $OUTPUT->notification(get_string('previewnotice', 'local_evalimport'), \core\output\notification::NOTIFY_INFO);
     echo local_evalimport_preview_table($preview['criteria']);
+    $totalpoints = format_float($preview['totalpoints'], 5, true, true);
+    $totaltext = get_string('previewtotalpoints', 'local_evalimport', $totalpoints);
+    echo html_writer::tag('p', html_writer::tag('strong', s($totaltext)));
     $confirmform->display();
 } else if (!$activities) {
     echo $OUTPUT->notification(get_string('noactivitiesavailable', 'local_evalimport'));

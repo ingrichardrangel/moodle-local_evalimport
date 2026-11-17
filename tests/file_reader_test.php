@@ -243,16 +243,14 @@ final class file_reader_test extends \advanced_testcase {
     }
 
     /**
-     * Both downloadable XLS templates can be imported as twenty-point rubrics.
+     * The downloadable XLS template can be imported as a twenty-point rubric.
      *
      * @return void
      */
-    public function test_xls_templates_are_importable(): void {
+    public function test_xls_template_is_importable(): void {
         $this->resetAfterTest();
-        foreach (['en', 'es'] as $language) {
-            $rows = \local_evalimport\local\xls_reader::read(__DIR__ . '/../templates/rubric-' . $language . '.xls');
-            $this->assertCount(2, rubric_validator::validate($rows, 20.0));
-        }
+        $rows = \local_evalimport\local\xls_reader::read(__DIR__ . '/../templates/rubric-en.xls');
+        $this->assertCount(2, rubric_validator::validate($rows, 20.0));
     }
 
     /**

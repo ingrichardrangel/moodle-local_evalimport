@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 — 2026-11-17
+
+- Add global scoring defaults and permission-controlled per-import settings
+  for matching the activity maximum, repeated scores and zero-point levels.
+- Add an editable rubric name and show the effective rules before import.
+  Recheck the preview on confirmation and record the rules with the Moodle draft.
+- Show the total rubric points in the preview by adding the maximum score
+  of each criterion.
+- Enforce a 255-character title limit and a 10,000 UTF-8 byte limit per text
+  field across CSV, XLS and XLSX. Use English interface strings and templates.
+
 ## 0.2.0-beta7 — 2026-09-23
 
 - Fix separate-group enforcement in production. Moodle can return the effective

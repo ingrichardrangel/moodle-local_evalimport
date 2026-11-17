@@ -49,13 +49,12 @@ if ($format === 'csv') {
     }
     fclose($stream);
 } else if ($format === 'xls') {
-    $language = substr(current_language(), 0, 2) === 'es' ? 'es' : 'en';
-    copy(__DIR__ . '/templates/rubric-' . $language . '.xls', $path);
+    copy(__DIR__ . '/templates/rubric-en.xls', $path);
 } else {
     require_once($CFG->libdir . '/excellib.class.php');
     $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
     $sheet = $book->getActiveSheet();
-    $sheet->setTitle('Rubrica');
+    $sheet->setTitle(get_string('templatesheetname', 'local_evalimport'));
     $sheet->fromArray($rows, null, 'A1');
     $sheet->getStyle('A1:D1')->getFont()->setBold(true);
     foreach (['A' => 25, 'B' => 20, 'C' => 70, 'D' => 12] as $column => $width) {

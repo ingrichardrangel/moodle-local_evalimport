@@ -24,8 +24,9 @@ Feature: Import a rubric using a reviewed file
     Given I log in as "teacher1"
     And I open the rubric importer for course "C1"
     When I upload "local/evalimport/tests/fixtures/rubric.<extension>" file to "Rubric file (CSV, XLS or XLSX)" filepicker
-    And I press "Preview rubric"
+    And I press "Load and review"
     Then I should see "No grading changes have been saved yet"
+    And I should see "Total rubric points: 20"
     And I should see "Clear and well-supported arguments."
     When I press "Confirm import"
     Then I should see "The rubric was imported as a draft"
@@ -40,18 +41,18 @@ Feature: Import a rubric using a reviewed file
     Given I log in as "teacher1"
     And I open the rubric importer for course "C1"
     When I upload "local/evalimport/tests/fixtures/rubric.csv" file to "Rubric file (CSV, XLS or XLSX)" filepicker
-    And I press "Preview rubric"
+    And I press "Load and review"
     And I press "Cancel"
     Then I should see "Rubric file (CSV, XLS or XLSX)"
     When I upload "local/evalimport/tests/fixtures/rubric.csv" file to "Rubric file (CSV, XLS or XLSX)" filepicker
-    And I press "Preview rubric"
+    And I press "Load and review"
     Then I should see "No grading changes have been saved yet"
 
   Scenario: Reject formulas before confirmation
     Given I log in as "teacher1"
     And I open the rubric importer for course "C1"
     When I upload "local/evalimport/tests/fixtures/formula.xlsx" file to "Rubric file (CSV, XLS or XLSX)" filepicker
-    And I press "Preview rubric"
+    And I press "Load and review"
     Then I should see "Cell D2 contains a formula"
     And I should not see "Confirm import"
 

@@ -28,7 +28,7 @@ namespace local_evalimport\privacy;
 /**
  * Privacy provider implementation for local_evalimport.
  *
- * This plugin does not store any personal data.
+ * The importer stores scoring settings without user identifiers or rubric content.
  *
  * @package    local_evalimport
  * @category   privacy

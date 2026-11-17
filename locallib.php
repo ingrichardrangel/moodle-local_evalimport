@@ -55,3 +55,29 @@ function local_evalimport_preview_table(array $criteria): string {
     }
     return html_writer::table($table);
 }
+
+/**
+ * Show the effective scoring rules that will be used on confirmation.
+ *
+ * @param array $rules Effective scoring rules.
+ * @return string
+ */
+function local_evalimport_preview_rules(array $rules): string {
+    $master = \local_evalimport\local\score_policy::MASTER;
+    $lines = [];
+    foreach (array_merge([$master], \local_evalimport\local\score_policy::RULES) as $key) {
+        $lines[] = s(get_string('previewrulestatus', 'local_evalimport', (object)[
+            'rule' => get_string($key, 'local_evalimport'),
+            'status' => get_string($rules[$key] ? 'yes' : 'no'),
+        ]));
+    }
+    if ($rules['minimumlevelscore'] !== null) {
+        $score = format_float($rules['minimumlevelscore'], 5, true, true);
+        $lines[] = s(get_string('previewminimumlevel', 'local_evalimport', $score));
+    }
+    if ($rules['maximumlevelscore'] !== null) {
+        $score = format_float($rules['maximumlevelscore'], 5, true, true);
+        $lines[] = s(get_string('previewmaximumlevel', 'local_evalimport', $score));
+    }
+    return html_writer::tag('p', get_string('previewvalidation', 'local_evalimport')) . html_writer::alist($lines);
+}

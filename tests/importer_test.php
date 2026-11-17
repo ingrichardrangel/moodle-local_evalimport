@@ -27,15 +27,18 @@ namespace local_evalimport;
 
 use local_evalimport\local\activity_service;
 use local_evalimport\local\importer;
+use local_evalimport\local\score_policy;
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\activity_service::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\importer::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_evalimport\local\score_policy::class)]
 
 /**
  * Integration tests against real Moodle grading tables and controllers.
  *
  * @covers \local_evalimport\local\activity_service
  * @covers \local_evalimport\local\importer
+ * @covers \local_evalimport\local\score_policy
  *
  * @package    local_evalimport
  * @copyright  2026 Richard Rangel
@@ -55,6 +58,7 @@ final class importer_test extends \advanced_testcase {
         $definitions = $DB->count_records('grading_definitions');
         $preview = importer::preview($course, $activity->cmid, $file);
         $this->assertCount(2, $preview['criteria']);
+        $this->assertSame(20.0, $preview['totalpoints']);
         $this->assertSame($areas, $DB->count_records('grading_areas'));
         $this->assertSame($definitions, $DB->count_records('grading_definitions'));
     }
@@ -199,6 +203,7 @@ final class importer_test extends \advanced_testcase {
      * @return void
      */
     public function test_group_access_with_and_without_override(): void {
+        global $DB;
         $this->resetAfterTest();
         [$course, $activity] = $this->setup_activity('assign', 20, SEPARATEGROUPS);
         $teacher = $this->getDataGenerator()->create_user();
@@ -221,12 +226,140 @@ final class importer_test extends \advanced_testcase {
         groups_add_member($group, $teacher);
         get_fast_modinfo($course, 0, true);
         $this->assertArrayHasKey($activity->cmid, activity_service::options($course));
+
+        $grouping = $this->getDataGenerator()->create_grouping(['courseid' => $course->id]);
+        $DB->set_field('course_modules', 'groupingid', $grouping->id, ['id' => $activity->cmid]);
+        rebuild_course_cache($course->id, true);
+        $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
+        groups_assign_grouping($grouping->id, $group->id);
+        get_fast_modinfo($course, 0, true);
+        $this->assertArrayHasKey($activity->cmid, activity_service::options($course));
         groups_remove_member($group, $teacher);
         get_fast_modinfo($course, 0, true);
         $this->assertArrayNotHasKey($activity->cmid, activity_service::options($course));
         assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $roleid, $context->id);
         accesslib_clear_all_caches_for_unit_testing();
         $this->assertArrayHasKey($activity->cmid, activity_service::options($course));
+    }
+
+    /**
+     * A 14-criterion rubric retains its original scores in a five-point assignment.
+     */
+    public function test_overridden_total_uses_native_grade_and_stores_rules(): void {
+        global $DB, $USER;
+        $this->resetAfterTest();
+        [$course, $activity, $file] = $this->setup_activity('assign', 5);
+        $csv = "criterion,level,level_description,score\n";
+        for ($criterion = 1; $criterion <= 14; $criterion++) {
+            $csv .= "Criterion $criterion,Excellent,Excellent work,10\n";
+            $csv .= "Criterion $criterion,Good,Good work,8.5\n";
+            $csv .= "Criterion $criterion,Satisfactory,Satisfactory work,7\n";
+            $csv .= "Criterion $criterion,Developing,Developing work,5\n";
+            $csv .= "Criterion $criterion,Missing,Missing work,0\n";
+        }
+        $file = get_file_storage()->create_file_from_string([
+            'contextid' => $file->get_contextid(), 'component' => 'user', 'filearea' => 'draft',
+            'itemid' => file_get_unused_draft_itemid(), 'filepath' => '/', 'filename' => 'rubric-140.csv',
+        ], $csv);
+
+        $name = 'Assessment rubric';
+        try {
+            importer::preview($course, $activity->cmid, $file, $name);
+            $this->fail('The default maximum-score matching rule accepted a 140-point rubric for a five-point assignment.');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame('errormismatchtotal', $exception->errorcode);
+        }
+
+        $overrides = ['matchactivitymaximum' => false];
+        $preview = importer::preview($course, $activity->cmid, $file, $name, $overrides);
+        $this->assertTrue($preview['policy']['canoverride']);
+        $this->assertFalse($preview['policy']['rules']['matchactivitymaximum']);
+        $this->assertTrue($preview['policy']['rules']['requirezerolevel']);
+        $this->assertSame(140.0, $preview['totalpoints']);
+        $reviewed = ['policy' => $preview['policy'], 'grademax' => $preview['target']['grademax']];
+        importer::save($course, $activity->cmid, $file, $name, $overrides, $reviewed);
+        $manager = get_grading_manager($preview['target']['context'], 'mod_assign', 'submissions');
+        $controller = $manager->get_controller('rubric');
+        $editable = $controller->get_definition_for_editing();
+        $this->assertSame($name, $editable->name);
+        $editable->status = \gradingform_controller::DEFINITION_STATUS_READY;
+        $controller->update_definition($editable);
+        $definition = $controller->get_definition(true);
+        $rules = $DB->get_field('local_evalimport_rules', 'rules', ['definitionid' => $definition->id], MUST_EXIST);
+        $this->assertSame($preview['policy']['rules'], json_decode($rules, true, 512, JSON_THROW_ON_ERROR));
+
+        $this->assertCount(14, $definition->rubric_criteria);
+        $this->assertSame(5.0, $preview['target']['grademax']);
+        $controller->set_grade_range(make_grades_menu((int)$preview['target']['grademax']), true);
+        $instance = $controller->create_instance($USER->id, 1);
+        $levelsbycriterion = [];
+        foreach ($definition->rubric_criteria as $criterionid => $criterion) {
+            $storedscores = array_map('floatval', array_column($criterion['levels'], 'score'));
+            sort($storedscores, SORT_NUMERIC);
+            $this->assertSame([0.0, 5.0, 7.0, 8.5, 10.0], $storedscores);
+            foreach ($criterion['levels'] as $levelid => $level) {
+                $levelsbycriterion[$criterionid][(string)(float)$level['score']] = $levelid;
+            }
+        }
+
+        // Select the same level in all 14 criteria and let Moodle calculate the activity grade.
+        foreach (['10' => 5.0, '8.5' => 4.25, '7' => 3.5, '5' => 2.5, '0' => 0.0] as $score => $expectedgrade) {
+            $selection = [];
+            foreach ($levelsbycriterion as $criterionid => $levels) {
+                $selection[$criterionid] = ['levelid' => $levels[$score], 'remark' => ''];
+            }
+            $instance->update(['criteria' => $selection]);
+            $this->assertEquals($expectedgrade, $instance->get_grade());
+        }
+        $controller->delete_definition();
+        (new \local_evalimport\task\cleanup_rules())->execute();
+        $this->assertFalse($DB->record_exists('local_evalimport_rules', ['definitionid' => $definition->id]));
+    }
+
+    /**
+     * Global rules apply without delegation and changes invalidate the review.
+     */
+    public function test_stale_review_is_rejected(): void {
+        global $DB;
+        $this->resetAfterTest();
+        [$course, $activity, $file] = $this->setup_activity();
+        $preview = importer::preview($course, $activity->cmid, $file);
+        $reviewed = ['policy' => $preview['policy'], 'grademax' => $preview['target']['grademax']];
+        set_config('matchactivitymaximum', 0, 'local_evalimport');
+        try {
+            importer::save($course, $activity->cmid, $file, $preview['name'], null, $reviewed);
+            $this->fail('A stale review was saved');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame('previewsettingschanged', $exception->errorcode);
+        }
+        $this->assertFalse($DB->record_exists('grading_definitions', []));
+        $this->assertFalse($DB->record_exists('local_evalimport_rules', []));
+    }
+
+    /**
+     * A delegated teacher needs the site switch and the Moodle capability.
+     */
+    public function test_delegated_rules_require_both_permissions(): void {
+        $this->resetAfterTest();
+        [$course] = $this->setup_activity();
+        $teacher = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($teacher->id, $course->id, 'editingteacher');
+        $this->setUser($teacher);
+        $context = \context_course::instance($course->id);
+        $this->assertFalse(score_policy::can_override($context));
+
+        set_config('allowvalidationoverride', 1, 'local_evalimport');
+        $this->assertFalse(score_policy::can_override($context));
+        $roleid = $this->getDataGenerator()->create_role();
+        role_assign($roleid, $teacher->id, $context->id);
+        assign_capability('local/evalimport:overridevalidation', CAP_ALLOW, $roleid, $context->id);
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->assertTrue(score_policy::can_override($context));
+
+        set_config('allowvalidationoverride', 0, 'local_evalimport');
+        $this->assertFalse(score_policy::can_override($context));
+        $this->expectExceptionMessage(get_string('previewsettingschanged', 'local_evalimport'));
+        score_policy::resolve($context, ['matchactivitymaximum' => false]);
     }
 
     /**
@@ -238,7 +371,7 @@ final class importer_test extends \advanced_testcase {
      * @return array
      */
     private function setup_activity(string $module = 'assign', int $maximum = 20, int $groupmode = 0): array {
-        global $USER, $CFG;
+        global $USER, $CFG, $DB;
         require_once($CFG->dirroot . '/grade/grading/lib.php');
         require_once($CFG->libdir . '/gradelib.php');
         $this->setAdminUser();
@@ -252,8 +385,8 @@ final class importer_test extends \advanced_testcase {
         }
         $activity = $this->getDataGenerator()->create_module($module, $settings);
         if ($groupmode !== NOGROUPS) {
-            set_coursemodule_groupmode($activity->cmid, $groupmode);
-            get_fast_modinfo($course, 0, true);
+            $DB->set_field('course_modules', 'groupmode', $groupmode, ['id' => $activity->cmid]);
+            rebuild_course_cache($course->id, true);
         }
         $file = get_file_storage()->create_file_from_pathname([
             'contextid' => \context_user::instance($USER->id)->id,

@@ -30,6 +30,22 @@ if ($hassiteconfig) {
         get_string('pluginname', 'local_evalimport')
     );
 
+    foreach (\local_evalimport\local\score_policy::defaults((object)[]) as $key => $default) {
+        $settings->add(new admin_setting_configcheckbox(
+            'local_evalimport/' . $key,
+            get_string($key, 'local_evalimport'),
+            get_string($key . '_desc', 'local_evalimport'),
+            (int)$default
+        ));
+    }
+
+    $settings->add(new admin_setting_configcheckbox(
+        'local_evalimport/allowvalidationoverride',
+        get_string('allowvalidationoverride', 'local_evalimport'),
+        get_string('allowvalidationoverride_desc', 'local_evalimport'),
+        0
+    ));
+
     $settings->add(new admin_setting_configcheckbox(
         'local_evalimport/enablemaxlevelscore',
         get_string('enablemaxlevelscore', 'local_evalimport'),
