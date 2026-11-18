@@ -143,6 +143,72 @@ final class rubric_validator_test extends \advanced_testcase {
     }
 
     /**
+     * The master switch and individual settings act independently.
+     */
+    public function test_optional_scoring_rules(): void {
+        $this->resetAfterTest();
+        $rows = [rubric_validator::HEADERS, ['A', 'High', 'Good', '140'], ['A', 'Low', 'Missing', '0']];
+        set_config('matchactivitymaximum', 0, 'local_evalimport');
+        $this->assertSame(140.0, rubric_validator::validate($rows, 5.0)[0]['levels'][0]['score']);
+
+        $rows[] = ['A', 'Same score', 'Different description', '140'];
+        $this->assert_rejected($rows, 'errorrepeatedscores');
+        set_config('requireuniquescores', 0, 'local_evalimport');
+        $rows[2][3] = '1';
+        $this->assert_rejected($rows, 'errorzerolevelmissing');
+        set_config('validatescores', 0, 'local_evalimport');
+        $this->assertCount(3, rubric_validator::validate($rows, 5.0)[0]['levels']);
+
+        $rows[2][3] = '140';
+        $this->assert_rejected($rows, 'norubricscorerange');
+        $rows[1][3] = '100000';
+        $this->assert_rejected($rows, 'rowerror');
+        set_config('enablemaxlevelscore', 1, 'local_evalimport');
+        $rows[1][3] = '140';
+        $rows[2][3] = '0';
+        $this->assert_rejected($rows, 'errormaxexceeded');
+    }
+
+    /**
+     * Count UTF-8 bytes in imported cells and UTF-8 characters in rubric names.
+     */
+    public function test_text_and_name_boundaries(): void {
+        $this->resetAfterTest();
+        $rows = $this->rows();
+        $rows[1][2] = str_repeat('é', 5000);
+        $this->assertSame($rows[1][2], rubric_validator::validate($rows, 10.0)[0]['levels'][0]['definition']);
+        $rows[1][2] .= 'a';
+        try {
+            rubric_validator::validate($rows, 10.0);
+            $this->fail('An overlong UTF-8 cell was accepted');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame('rowerror', $exception->errorcode);
+            $this->assertStringContainsString('Row 2, column level_description', $exception->getMessage());
+            $this->assertStringContainsString('10000 UTF-8 bytes', $exception->getMessage());
+        }
+
+        $name = str_repeat('é', 255);
+        rubric_validator::validate_name($name);
+        $this->expectExceptionMessage('255 characters');
+        rubric_validator::validate_name($name . 'a');
+    }
+
+    /**
+     * Check the expected scoring error.
+     *
+     * @param array $rows File rows.
+     * @param string $code Expected error code.
+     */
+    private function assert_rejected(array $rows, string $code): void {
+        try {
+            rubric_validator::validate($rows, 5.0);
+            $this->fail('The scoring rules accepted an invalid rubric');
+        } catch (\moodle_exception $exception) {
+            $this->assertSame($code, $exception->errorcode);
+        }
+    }
+
+    /**
      * Valid small rubric.
      *
      * @return array

@@ -25,6 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
+    'local/evalimport:overridevalidation' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'riskbitmask' => RISK_DATALOSS,
+        'archetypes' => [],
+    ],
     'local/evalimport:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSE,
